@@ -4,6 +4,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 
 import java.time.Duration;
 
@@ -15,9 +16,14 @@ public class RateLimiterBucketConfig {
         return Bucket.builder()
                 .addLimit(
                         Bandwidth.builder()
-                                .capacity(50)
-                                .refillGreedy(50, Duration.ofMinutes(1))
+                                .capacity(100)
+                                .refillGreedy(100, Duration.ofMinutes(1))
                                 .build())
                 .build();
+    }
+
+    @Bean
+    public AntPathMatcher getPathMatcher() {
+        return new AntPathMatcher();
     }
 }
