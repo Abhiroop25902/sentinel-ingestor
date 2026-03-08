@@ -35,6 +35,12 @@ dependencies {
     implementation 'com.google.cloud:spring-cloud-gcp-starter'
     implementation 'com.google.cloud:spring-cloud-gcp-starter-data-firestore'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'com.google.cloud:google-cloudevent-types:0.17.1'
+    implementation platform('io.cloudevents:cloudevents-bom:4.0.1')
+    implementation 'io.cloudevents:cloudevents-api'
+    implementation 'io.cloudevents:cloudevents-core'
+    implementation 'io.cloudevents:cloudevents-json-jackson'
+    implementation 'io.cloudevents:cloudevents-spring'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
