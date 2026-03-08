@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
     private final Bucket bucket;
-
+    private final AntPathMatcher pathMatcher;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -28,5 +29,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Sentinel Ingestor: Too many requests. Eventarc will retry.\"}");
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        final String path = request.getServletPath();
+
+        return pathMatcher.match("/actuator/**", path);
     }
 }
