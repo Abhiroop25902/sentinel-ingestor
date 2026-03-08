@@ -41,6 +41,7 @@ dependencies {
     implementation 'io.cloudevents:cloudevents-core'
     implementation 'io.cloudevents:cloudevents-json-jackson'
     implementation 'io.cloudevents:cloudevents-spring'
+    implementation 'io.cloudevents:cloudevents-http-basic'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
