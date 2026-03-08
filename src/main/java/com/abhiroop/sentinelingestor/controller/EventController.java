@@ -15,8 +15,8 @@ import java.util.Objects;
 public class EventController {
     @PostMapping("/event")
     public ResponseEntity<CloudEvent> createEvent(@RequestBody CloudEvent event) {
-        log.debug("Event Id: {}", event.getId());
-        log.debug(new String(Objects.requireNonNull(event.getData()).toBytes(), StandardCharsets.UTF_8));
+        log.info("Event Id: {}", event.getId());
+        log.info(new String(Objects.requireNonNull(event.getData()).toBytes(), StandardCharsets.UTF_8));
 
         return ResponseEntity.ok().body(event);
     }
