@@ -16,8 +16,10 @@ public class RateLimiterBucketConfig {
         return Bucket.builder()
                 .addLimit(
                         Bandwidth.builder()
-                                .capacity(100)
-                                .refillGreedy(100, Duration.ofMinutes(1))
+                                // max concurr 300 in google cloud per instance, bucket limit to 280
+                                // 20 as buffer for /actuator/**
+                                .capacity(280)
+                                .refillGreedy(280, Duration.ofSeconds(1))
                                 .build())
                 .build();
     }
