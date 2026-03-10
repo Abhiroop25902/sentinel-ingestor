@@ -40,6 +40,7 @@ public class EventController {
         PubsubMessage message = messageBuilder.build();
         // Now you can get the attributes and the data
         String base64Data = message.getData().toStringUtf8();
+        log.info("Event Data base64Data: {}", base64Data);
 
         // 2. Decode the Base64 "inner" JSON
         byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
