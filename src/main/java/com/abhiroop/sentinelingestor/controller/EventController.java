@@ -3,9 +3,8 @@ package com.abhiroop.sentinelingestor.controller;
 import com.abhiroop.sentinelingestor.dto.LoginHistoryDto;
 import com.abhiroop.sentinelingestor.dto.PubSubMessageData;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.events.cloud.pubsub.v1.PubsubMessage;
-import com.google.protobuf.util.JsonFormat;
 import io.cloudevents.CloudEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +33,9 @@ public class EventController {
 
         log.info("Event Data String: {}", jsonString);
 
-        PubsubMessage.Builder messageBuilder = PubsubMessage.newBuilder();
-        // Use Google's JsonFormat to parse the string into the Proto object
-        JsonFormat.parser().merge(new String(bytes, StandardCharsets.UTF_8), messageBuilder);
-        PubsubMessage message = messageBuilder.build();
-        // Now you can get the attributes and the data
-        String base64Data = message.getData().toStringUtf8();
-        log.info("Event Data base64Data: {}", base64Data);
+        JsonNode root = objectMapper.readTree(bytes);
+        String base64Data = root.path("message").path("data").asText();
+        log.info("Event Data Base64 String: {}", base64Data);
 
         // 2. Decode the Base64 "inner" JSON
         byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
