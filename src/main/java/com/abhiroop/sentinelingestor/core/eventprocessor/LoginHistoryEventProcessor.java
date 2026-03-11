@@ -3,6 +3,7 @@ package com.abhiroop.sentinelingestor.core.eventprocessor;
 import com.abhiroop.sentinelingestor.dto.LoginHistoryDto;
 import com.abhiroop.sentinelingestor.entity.LoginHistoryEntity;
 import com.abhiroop.sentinelingestor.mapper.LoginHistoryMapper;
+import com.abhiroop.sentinelingestor.repository.LoginHistoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ class LoginHistoryEventProcessor implements EventProcessorStrategy {
 
     private final ObjectMapper objectMapper;
     private final LoginHistoryMapper loginHistoryMapper;
-//    private final LoginHistoryRepository loginHistoryRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
 
     @Override
     public String getStrategyKey() {
@@ -29,8 +30,6 @@ class LoginHistoryEventProcessor implements EventProcessorStrategy {
         return Mono.fromCallable(() -> objectMapper.treeToValue(dataNode, LoginHistoryDto.class))
                 .doOnError(e -> log.error("objectMapper.treeToValue error", e))
                 .map(loginHistoryMapper::toEntity)
-                .doOnNext(loginHistoryEntity -> log.info(loginHistoryEntity.toString()));
-        // TODO: change above doOnNext to below flatMap when you are ready for data to get pushed to db
-        //.flatMap(loginHistoryRepository::save);
+                .flatMap(loginHistoryRepository::save);
     }
 }
