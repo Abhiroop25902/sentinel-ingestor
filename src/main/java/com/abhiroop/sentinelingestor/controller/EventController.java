@@ -1,20 +1,16 @@
 package com.abhiroop.sentinelingestor.controller;
 
-import com.abhiroop.sentinelingestor.dto.LoginHistoryDto;
-import com.abhiroop.sentinelingestor.dto.PubSubMessageData;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.abhiroop.sentinelingestor.core.eventprocessor.EventDispatcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 
@@ -23,31 +19,33 @@ import java.util.Objects;
 @AllArgsConstructor
 public class EventController {
     private final ObjectMapper objectMapper;
+    private final EventDispatcher eventDispatcher;
 
     @PostMapping("/event")
-    public ResponseEntity<CloudEvent> createEvent(@RequestBody CloudEvent event) throws IOException {
-        log.info("Event Id: {}", event.getId());
-
-        final var bytes = Objects.requireNonNull(event.getData()).toBytes();
-        final var jsonString = new String(bytes, StandardCharsets.UTF_8);
-
-        log.info("Event Data String: {}", jsonString);
-
-        JsonNode root = objectMapper.readTree(bytes);
-        String base64Data = root.path("message").path("data").asText();
-        log.info("Event Data Base64 String: {}", base64Data);
-
-        // 2. Decode the Base64 "inner" JSON
-        byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
-
-        final PubSubMessageData<LoginHistoryDto> pubSubMessageData = objectMapper.readValue(
-                decodedBytes,
-                new TypeReference<>() {
-                }
-        );
-
-        log.info("Event Data: {}", pubSubMessageData);
-
-        return ResponseEntity.ok().body(event);
+    public Mono<?> createEvent(@RequestBody CloudEvent event) {
+        return Mono.fromCallable(() -> {
+                    // 1. Extract from CloudEvent
+                    final var bytes = Objects.requireNonNull(event.getData()).toBytes();
+                    JsonNode root = objectMapper.readTree(bytes);
+                    // 2. Decode the Base64 "inner" JSON
+                    String base64Data = root.path("message").path("data").asText();
+                    if (base64Data.isEmpty()) throw new IllegalArgumentException("Empty Pub/Sub data");
+                    return Base64.getDecoder().decode(base64Data);
+                })
+                .flatMap(decodedBytes -> Mono.fromCallable(() -> objectMapper.readTree(decodedBytes)))
+                .flatMap(pubSubMessageData -> {
+                            // pubSubMessageData is of type PubSubMessageData<?>
+                            // ? is determined by the type, and each type is associated with its own processing
+                            // Hence: Strategy Pattern can be used
+                            String type = pubSubMessageData.path("type").asText();
+                            JsonNode data = pubSubMessageData.path("data");
+                            if (type.isEmpty() || data.isMissingNode()) {
+                                return Mono.error(new IllegalArgumentException("Invalid pubSubMessageData format: {}"));
+                            }
+                            return eventDispatcher.dispatch(type, data);
+                        }
+                )
+                .doOnError(e -> log.error("Ingestion failed: {}", e.getMessage()))
+                .then();
     }
 }
