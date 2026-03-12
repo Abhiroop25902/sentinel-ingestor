@@ -28,8 +28,13 @@ class LoginHistoryEventProcessor implements EventProcessorStrategy {
     @Override
     public Mono<LoginHistoryEntity> process(JsonNode dataNode) {
         return Mono.fromCallable(() -> objectMapper.treeToValue(dataNode, LoginHistoryDto.class))
+                //TODO: remove this doOnNext after debug
+                .doOnNext(loginHistoryDto -> log.info("loginHistoryDto: {}", loginHistoryDto))
                 .doOnError(e -> log.error("objectMapper.treeToValue error", e))
                 .map(loginHistoryMapper::toEntity)
-                .flatMap(loginHistoryRepository::save);
+                //TODO: remove this doOnNext after debug
+                .doOnNext(loginHistoryEntity -> log.info("loginHistoryEntity: {}", loginHistoryEntity));
+
+//                .flatMap(loginHistoryRepository::save);
     }
 }
