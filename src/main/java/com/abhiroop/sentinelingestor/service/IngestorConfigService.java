@@ -4,7 +4,6 @@ import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 import com.google.firebase.remoteconfig.ServerTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -35,8 +35,9 @@ public class IngestorConfigService {
         return defaultValue;
     }
 
-    @Scheduled(fixedRate = 60000)
-    public void refreshConfig() throws FirebaseRemoteConfigException {
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
+    public void refreshConfig() {
+        log.error("starting refresh config");
         Mono.<ServerTemplate>create(sink -> {
             final var serverTemplateFuture = FirebaseRemoteConfig.getInstance().getServerTemplateAsync();
 
@@ -53,7 +54,7 @@ public class IngestorConfigService {
             }, MoreExecutors.directExecutor());
         }).doOnNext(template -> {
             String jsonString = template.toJson();
-            log.info("jsonString: {}", jsonString);
+            log.error("jsonString: {}", jsonString);
         }).subscribe();
     }
 }
