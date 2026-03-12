@@ -44,6 +44,7 @@ dependencies {
     implementation 'io.cloudevents:cloudevents-http-basic'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.16.1'
     implementation 'org.mapstruct:mapstruct:1.6.3'
+    implementation 'com.google.firebase:firebase-admin:9.8.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
