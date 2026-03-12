@@ -70,6 +70,6 @@ public class IngestorConfigService {
                     parameters.fieldNames().forEachRemaining(fieldName ->
                             configMap.put(fieldName, parameters.path(fieldName).path("defaultValue").path("value").asText())
                     );
-                }).then();
+                }).then(Mono.fromRunnable(() -> log.info("Successfully refreshed config: {}", configMap)));
     }
 }
