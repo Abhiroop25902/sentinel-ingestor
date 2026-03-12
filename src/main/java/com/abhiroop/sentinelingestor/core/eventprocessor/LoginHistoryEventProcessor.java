@@ -3,7 +3,6 @@ package com.abhiroop.sentinelingestor.core.eventprocessor;
 import com.abhiroop.sentinelingestor.dto.LoginHistoryDto;
 import com.abhiroop.sentinelingestor.entity.LoginHistoryEntity;
 import com.abhiroop.sentinelingestor.mapper.LoginHistoryMapper;
-import com.abhiroop.sentinelingestor.repository.LoginHistoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ class LoginHistoryEventProcessor implements EventProcessorStrategy {
 
     private final ObjectMapper objectMapper;
     private final LoginHistoryMapper loginHistoryMapper;
-    private final LoginHistoryRepository loginHistoryRepository;
+//    private final LoginHistoryRepository loginHistoryRepository;
 
     @Override
     public String getStrategyKey() {
