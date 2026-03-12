@@ -30,23 +30,20 @@ class LoginHistoryEventProcessor implements EventProcessorStrategy {
 
     @Override
     public Mono<LoginHistoryEntity> process(JsonNode dataNode) {
+        final boolean printLog = ingestorConfigService.getConfig(IngesterConfigServiceKey.PRINT_LOG, false, Boolean::valueOf);
+        final boolean saveToDb = ingestorConfigService.getConfig(IngesterConfigServiceKey.SAVE_TO_DB, false, Boolean::valueOf);
+
         return Mono.fromCallable(() -> objectMapper.treeToValue(dataNode, LoginHistoryDto.class))
                 .doOnError(e -> log.error("objectMapper.treeToValue error", e))
                 .doOnNext(loginHistoryDto -> {
-                    if (ingestorConfigService.getConfig(IngesterConfigServiceKey.PRINT_LOG, false, Boolean.class)) {
-                        log.info("loginHistoryDto: {}", loginHistoryDto);
-                    }
+                    if (printLog) log.info("loginHistoryDto: {}", loginHistoryDto);
                 })
                 .map(loginHistoryMapper::toEntity)
                 .doOnNext(loginHistoryEntity -> {
-                    if (ingestorConfigService.getConfig(IngesterConfigServiceKey.PRINT_LOG, false, Boolean.class)) {
-                        log.info("loginHistoryEntity: {}", loginHistoryEntity);
-                    }
+                    if (printLog) log.info("loginHistoryEntity: {}", loginHistoryEntity);
                 })
                 .flatMap(loginHistoryEntity -> {
-                    if (ingestorConfigService.getConfig(IngesterConfigServiceKey.SAVE_TO_DB, false, Boolean.class)) {
-                        return loginHistoryRepository.save(loginHistoryEntity);
-                    }
+                    if (saveToDb) return loginHistoryRepository.save(loginHistoryEntity);
                     return Mono.just(loginHistoryEntity);
                 })
                 .doOnError(e -> log.error("loginHistoryRepository.saveToDb error", e));
