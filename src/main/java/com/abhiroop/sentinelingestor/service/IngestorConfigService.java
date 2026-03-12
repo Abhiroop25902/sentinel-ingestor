@@ -6,13 +6,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.ServerTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -22,6 +24,17 @@ public class IngestorConfigService {
     public IngestorConfigService() {
         configMap.put(IngesterConfigServiceKey.SAVE_TO_DB.getKey(), false);
         configMap.put(IngesterConfigServiceKey.PRINT_LOG.getKey(), false);
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void onStartup() {
+        log.info("starting refresh config");
+        refreshConfig()
+                .doOnNext(template -> {
+                    String jsonString = template.toJson();
+                    log.info("jsonString: {}", jsonString);
+                })
+                .block(Duration.ofSeconds(10));
     }
 
     public <T> T getConfig(IngesterConfigServiceKey ingesterConfigServiceKey, T defaultValue, Class<T> clazz) {
@@ -35,10 +48,9 @@ public class IngestorConfigService {
         return defaultValue;
     }
 
-    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
-    public void refreshConfig() {
-        log.error("starting refresh config");
-        Mono.<ServerTemplate>create(sink -> {
+    @Scheduled(fixedRate = 60000)
+    public Mono<ServerTemplate> refreshConfig() {
+        return Mono.create(sink -> {
             final var serverTemplateFuture = FirebaseRemoteConfig.getInstance().getServerTemplateAsync();
 
             ApiFutures.addCallback(serverTemplateFuture, new ApiFutureCallback<>() {
@@ -52,9 +64,6 @@ public class IngestorConfigService {
                     sink.success(template);
                 }
             }, MoreExecutors.directExecutor());
-        }).doOnNext(template -> {
-            String jsonString = template.toJson();
-            log.error("jsonString: {}", jsonString);
-        }).subscribe();
+        });
     }
 }
