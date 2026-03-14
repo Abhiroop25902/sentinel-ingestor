@@ -42,7 +42,12 @@ public class IngestorConfigService {
             return defaultValue;
         }
         String value = configMap.get(ingesterConfigServiceKey.getKey());
-        return mapper.apply(value);
+        try {
+            return mapper.apply(value);
+        } catch (Exception ex) {
+            log.error("Failed to parse config key {}: {}", ingesterConfigServiceKey.getKey(), ex.getMessage());
+            return defaultValue;
+        }
     }
 
     @Scheduled(fixedRate = 60000)
