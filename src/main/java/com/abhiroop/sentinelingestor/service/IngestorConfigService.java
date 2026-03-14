@@ -63,7 +63,8 @@ public class IngestorConfigService {
                     }, MoreExecutors.directExecutor());
                 })
                 .map(ServerTemplate::toJson)
-                .flatMap(json -> Mono.fromCallable(() -> objectMapper.readTree(json)))
+                .doOnNext(jsonString -> log.info("Sentinel: Config loaded successfully: {}", jsonString))
+                .flatMap(jsonString -> Mono.fromCallable(() -> objectMapper.readTree(jsonString)))
                 .doOnError(e -> log.error("objectMapper.readTree error: {}", e.getMessage()))
                 .doOnNext(jsonNode -> {
                     final JsonNode parameters = jsonNode.path("parameters");
