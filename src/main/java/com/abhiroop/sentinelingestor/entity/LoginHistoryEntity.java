@@ -12,6 +12,7 @@ public record LoginHistoryEntity(
         String id,
         String email,
         boolean success,
-        Timestamp timestamp
+        Timestamp timestamp,
+        Timestamp expireAt
 ) {
 }
